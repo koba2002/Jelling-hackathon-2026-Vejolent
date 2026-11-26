@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.py[cod]
+venv/
+.venv/
+
+# MediaPipe models (download them, see README)
+*.task
+
+# Local data
+# NFC tag UIDs of our own cards, learned at runtime
+cards.json
+
+# Photos and artwork belong to their owners, see images/README.md
+images/*
+!images/README.md
+
+# Nordic / Zephyr build output
+nordic/**/build/
+build/
+
+# Editors and OS
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+
+# Old download bundles
+*.zip

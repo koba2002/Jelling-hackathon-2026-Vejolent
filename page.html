@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><title>Harald's Messengers</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;600;800&family=Noto+Sans+Runic&family=Vazirmatn:wght@300;400;700;900&display=swap" rel="stylesheet">
+<style>
+/* "Ember" look: dark room, Viking figures in the background, a stone lit by firelight. */
+:root{
+  --ink:#eeeae2; --soft:#c9c5bd; --dim:#8d897f; --ember:#e0663a; --red:#c4483a;
+  --text:"Figtree","Vazirmatn","Segoe UI",Arial,sans-serif;
+  --rune:"Noto Sans Runic","Segoe UI Historic","Segoe UI Symbol",serif;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;overflow:hidden}
+body{color:var(--ink);font-family:var(--text);
+  background:radial-gradient(ellipse 45% 55% at 82% 100%,rgba(194,72,58,.26),transparent 70%),linear-gradient(#0b0807,#000);
+  display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:3vw;padding:0 6vw 0 8vw}
+html[dir=rtl] body{padding:0 8vw 0 6vw;
+  background:radial-gradient(ellipse 45% 55% at 18% 100%,rgba(194,72,58,.26),transparent 70%),linear-gradient(#0b0807,#000)}
+
+/* the Viking figures: centre stage, between the text and the stone */
+#figures{position:fixed;bottom:0;left:17vw;width:50vw;height:86vh;z-index:0;pointer-events:none;mix-blend-mode:screen;
+  background:url(/images/vikings.jpg) no-repeat center bottom/contain;opacity:.2;transition:opacity 1.2s,filter 1.2s;
+  -webkit-mask-image:linear-gradient(to bottom,transparent,#000 30%);mask-image:linear-gradient(to bottom,transparent,#000 30%)}
+html[dir=rtl] #figures{left:33vw;transform:scaleX(-1)}
+body.big #figures{opacity:.34}
+body.glory #figures{opacity:.6;filter:sepia(.5) brightness(1.15)}
+
+#left{position:relative;z-index:3;max-width:54ch;text-shadow:0 0 2vh #000,0 0 4vh #000}
+#dots{display:flex;gap:.8vw;margin-bottom:2.2vh}
+#dots i{width:1.2vh;height:1.2vh;border-radius:50%;background:#3d3a36}
+#dots i.on{background:var(--red)}
+#eyebrow{font:600 1.7vh var(--text);letter-spacing:.35em;text-transform:uppercase;color:var(--ember);margin-bottom:2.2vh}
+html[lang=fa] #eyebrow{letter-spacing:0}
+h1{font:800 6.6vh/1.05 var(--text);text-transform:uppercase;letter-spacing:.03em;margin:0 0 3vh}
+body.long h1{font-size:5.2vh}
+body.long #story{font-size:2.15vh;line-height:1.6}
+html[lang=fa] h1{text-transform:none;letter-spacing:0;line-height:1.35}
+#story{font:300 2.35vh/1.65 var(--text);color:var(--soft);margin:0;white-space:pre-line}
+#photo{display:none;align-items:center;gap:1.2vw;margin-top:3vh;font:400 1.5vh var(--text);color:var(--dim);
+  letter-spacing:.12em;text-transform:uppercase}
+#photo img{width:15vh;height:10vh;object-fit:cover;border:1px solid #333;filter:contrast(1.05) saturate(.85)}
+#body{margin:3.6vh 0 0;font:600 1.8vh/1.6 var(--text);letter-spacing:.18em;text-transform:uppercase;color:var(--ink);
+  display:flex;align-items:flex-start;gap:1.2vw}
+#body:before{content:"";flex:0 0 4vw;height:1px;background:var(--red);margin-top:1.1vh}
+html[lang=fa] #body{letter-spacing:0}
+#langs{display:flex;flex-wrap:wrap;gap:.8vw;margin-top:4vh}
+#langs span{font:600 1.9vh var(--text);letter-spacing:.08em;padding:.9vh 1.5vw;border:1px solid #4a4640;border-radius:99px;color:var(--dim);background:rgba(0,0,0,.55)}
+#langs span.on{border-color:var(--ember);color:#000;background:var(--ember)}
+#name{display:none;width:100%;margin-top:3vh;font:800 4.6vh var(--text);text-transform:uppercase;letter-spacing:.06em;
+  padding:1.2vh 0;background:transparent;color:var(--ink);border:none;border-bottom:2px solid var(--ember);outline:none}
+button{font-family:var(--text);cursor:pointer}
+#again{display:none;margin-top:4vh;font:600 1.9vh var(--text);letter-spacing:.2em;text-transform:uppercase;
+  padding:1.6vh 2.6vw;background:transparent;color:var(--ink);border:1px solid var(--ember);border-radius:99px}
+#again:hover{background:var(--ember);color:#000}
+#quit{display:none;position:fixed;top:3.8vh;inset-inline-end:3vw;z-index:5;font:600 1.5vh var(--text);letter-spacing:.2em;
+  text-transform:uppercase;padding:.9vh 1.4vw;background:transparent;color:var(--dim);border:1px solid #3d3a36;border-radius:99px}
+#quit.confirm{color:#000;background:var(--ember);border-color:var(--ember)}
+#err{position:fixed;bottom:6vh;inset-inline-start:8vw;z-index:6;background:rgba(196,72,58,.95);color:#fff;
+  font:600 2.2vh var(--text);padding:1.6vh 2vw;border-radius:.6vh;display:none}
+#status{position:fixed;bottom:.6vh;left:1vw;z-index:6;font:11px monospace;color:#3d3a36;direction:ltr}
+
+/* the stone: smaller, standing on the floor, so the figures stay visible */
+#stonewrap{position:relative;z-index:2;align-self:end;margin-bottom:5vh;height:66vh}
+#stone{direction:ltr;height:100%;width:auto;filter:drop-shadow(0 2vh 4vh rgba(194,72,58,.3));transition:opacity .8s,filter .8s}
+#stone.ghost{opacity:.25;filter:grayscale(1) blur(1.5px)}
+#glow{position:absolute;bottom:-2vh;left:50%;transform:translateX(-50%);width:130%;height:6vh;
+  background:radial-gradient(ellipse,rgba(224,102,58,.45),transparent 70%);transition:opacity .6s,transform .6s}
+.carve{fill:#5c140e;stroke:#5c140e;stroke-width:1px;font-family:var(--rune);text-anchor:middle}
+#caption{font:600 13px var(--text);letter-spacing:5px;fill:#2e2a26;text-anchor:middle;text-transform:uppercase}
+#n13{font:800 30px var(--text);fill:#6e1b14;text-anchor:middle}
+
+/* hot and cold meter */
+#prox{display:none;margin-top:4vh;max-width:34vw}
+#proxtop{display:flex;align-items:baseline;gap:1vw;font:600 1.5vh var(--text);letter-spacing:.3em;text-transform:uppercase;color:var(--dim)}
+html[lang=fa] #proxtop{letter-spacing:0}
+#proxrunes{font:400 3vh var(--rune);letter-spacing:.15em;color:var(--ink)}
+#proxbar{height:.9vh;margin:1.2vh 0;border-radius:99px;background:#26231f;overflow:hidden}
+#proxfill{height:100%;width:0;border-radius:99px;background:linear-gradient(90deg,#5d6f86,#e0663a 70%,#ffd08a);transition:width .5s ease}
+html[dir=rtl] #proxfill{background:linear-gradient(270deg,#5d6f86,#e0663a 70%,#ffd08a)}
+#proxlabel{font:800 2.4vh var(--text);letter-spacing:.12em;text-transform:uppercase;color:var(--ember)}
+#prox.here #proxlabel{animation:pulse 1s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.45}}
+
+.fade{animation:fade .7s ease both}
+@keyframes fade{from{opacity:0;transform:translateY(1.2vh)}to{opacity:1;transform:none}}
+
+/* ---------- carving animation (after the name is entered) ---------- */
+.chisel{transform-box:fill-box;transform-origin:center;opacity:0;animation:chisel .5s cubic-bezier(.2,.8,.3,1.2) forwards}
+@keyframes chisel{
+  0%{opacity:0;transform:scale(1.8);fill:#fff6d8;filter:blur(4px)}
+  45%{opacity:1;fill:#ffb36b;filter:blur(0)}
+  100%{opacity:1;transform:scale(1);fill:#5c140e}}
+.dust{transform-box:fill-box;transform-origin:center;animation:dust .8s ease-out forwards;opacity:0}
+@keyframes dust{0%{opacity:1;transform:translate(0,0) scale(1)}100%{opacity:0;transform:translate(var(--dx),var(--dy)) scale(.3)}}
+#stonewrap.shake{animation:shake .35s linear 2}
+@keyframes shake{25%{transform:translateX(-3px)}50%{transform:translateX(2px)}75%{transform:translateX(-1px)}}
+#stonewrap.blaze #glow{transform:translateX(-50%) scale(1.25);opacity:1;animation:blaze 2.4s ease-in-out infinite}
+@keyframes blaze{50%{filter:brightness(1.6)}}
+.late{opacity:0;animation:fade .8s ease forwards}
+#flash{position:fixed;inset:0;z-index:7;pointer-events:none;background:radial-gradient(circle at 80% 60%,rgba(255,200,140,.35),transparent 60%);opacity:0}
+#flash.go{animation:flash 1.4s ease-out}
+@keyframes flash{15%{opacity:1}100%{opacity:0}}
+</style></head><body>
+<div id="figures"></div>
+<button id="quit"></button>
+
+<main id="left">
+  <div id="dots"></div>
+  <div id="eyebrow"></div>
+  <h1 id="title"></h1>
+  <p id="story"></p>
+  <div id="photo"><img id="photoimg" alt=""><span id="photocap"></span></div>
+  <input id="name" maxlength="20" autocomplete="off" spellcheck="false">
+  <p id="body"></p>
+  <button id="again"></button>
+  <div id="langs"></div>
+  <div id="prox">
+    <div id="proxtop"><span id="proxtitle"></span><span id="proxrunes"></span></div>
+    <div id="proxbar"><div id="proxfill"></div></div>
+    <div id="proxlabel"></div>
+  </div>
+</main>
+
+<div id="stonewrap">
+<div id="glow"></div>
+<svg id="stone" direction="ltr" viewBox="0 0 400 660" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+  <defs>
+    <filter id="granite" filterUnits="userSpaceOnUse" x="0" y="0" width="400" height="660">
+      <feTurbulence type="fractalNoise" baseFrequency=".035" numOctaves="5" seed="3" result="big"/>
+      <feTurbulence type="fractalNoise" baseFrequency="1.1" numOctaves="2" seed="9" result="fine"/>
+      <feComposite in="big" in2="fine" operator="arithmetic" k2=".75" k3=".45" result="bump"/>
+      <feDiffuseLighting in="bump" surfaceScale="4" lighting-color="#ffe9d2" result="light">
+        <feDistantLight azimuth="240" elevation="45"/></feDiffuseLighting>
+      <feBlend in="SourceGraphic" in2="light" mode="multiply" result="lit"/>
+      <feComposite in="lit" in2="SourceGraphic" operator="in"/>
+    </filter>
+    <!-- darker granite than before, lit from the fire below-right -->
+    <radialGradient id="g" cx="55%" cy="70%" r="85%">
+      <stop offset="0" stop-color="#a49c90"/><stop offset=".55" stop-color="#6f6960"/><stop offset="1" stop-color="#26231f"/>
+    </radialGradient>
+    <path id="u" d="M84 660 L82 232 Q86 92 205 86 Q322 92 326 232 L324 660"/>
+  </defs>
+  <g filter="url(#granite)">
+    <path d="M34 660 L20 250 Q18 60 150 26 Q230 10 300 34 Q382 72 384 240 L374 660 Z" fill="url(#g)"/>
+    <use href="#u" fill="none" stroke="#7e241c" stroke-width="48"/>
+    <use href="#u" fill="none" stroke="#7a746a" stroke-width="38"/>
+    <text font-family="Noto Sans Runic, Segoe UI Historic, serif" font-size="26" fill="#7e241c" dy="9">
+      <textPath id="band" href="#u" startOffset="10"></textPath></text>
+    <path d="M128 560 C165 505 245 615 282 560 C245 505 165 615 128 560" fill="none" stroke="#7e241c" stroke-width="5"/>
+  </g>
+  <g id="carved"></g>
+  <text id="caption" x="205" y="440"></text>
+  <text id="n13" x="205" y="490" display="none">13</text>
+</svg>
+</div>
+
+<div id="flash"></div>
+<div id="err"></div>
+<div id="status"></div>
+
+<script>
+const $ = id => document.getElementById(id);
+const SVG = "http://www.w3.org/2000/svg";
+let phase = "", quitArmed = 0, lastStone = "", bandSet = false, carvedAt = 0;
+
+async function post(url, data){
+  await fetch(url, {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(data)});
+  refresh();
+}
+
+function lineSize(lines){
+  const longest = Math.max(1, ...lines.map(l => [...l].length));
+  return Math.min(66, 190 / (longest * 0.7), 190 / lines.length);
+}
+
+// Plain carving: the city or "Harald" just fades in.
+function carve(lines){
+  const g = $("carved"); g.innerHTML = "";
+  const size = lineSize(lines), top = 300 - (lines.length - 1) * size * 0.6;
+  lines.forEach((line, i) => {
+    const t = document.createElementNS(SVG, "text");
+    t.setAttribute("class", "carve fade");
+    t.setAttribute("x", 205); t.setAttribute("y", top + i * size * 1.2);
+    t.setAttribute("font-size", size); t.textContent = line;
+    g.appendChild(t);
+  });
+}
+
+// The big moment: each rune of the visitor's name is chiselled in, with stone dust.
+function carveName(lines){
+  const g = $("carved"); g.innerHTML = "";
+  const size = lineSize(lines), top = 300 - (lines.length - 1) * size * 0.6;
+  const STEP = 0.32;                 // seconds between runes
+  let n = 0;
+  lines.forEach((line, li) => {
+    const y = top + li * size * 1.2;
+    // measure where each rune sits, then replace the line with one element per rune
+    const probe = document.createElementNS(SVG, "text");
+    probe.setAttribute("class", "carve"); probe.setAttribute("x", 205); probe.setAttribute("y", y);
+    probe.setAttribute("font-size", size); probe.textContent = line;
+    g.appendChild(probe);
+    const chars = [...line];
+    const boxes = chars.map((_, i) => { try { return probe.getExtentOfChar(i); } catch(e) { return null; } });
+    g.removeChild(probe);
+    chars.forEach((ch, i) => {
+      const b = boxes[i]; if (!b || !ch.trim()) return;
+      const delay = 0.9 + n * STEP; n++;
+      const t = document.createElementNS(SVG, "text");
+      t.setAttribute("class", "carve chisel");
+      t.setAttribute("x", b.x + b.width / 2); t.setAttribute("y", y);
+      t.setAttribute("font-size", size); t.textContent = ch;
+      t.style.animationDelay = delay + "s";
+      g.appendChild(t);
+      for (let k = 0; k < 7; k++){           // dust flying off the chisel
+        const d = document.createElementNS(SVG, "circle");
+        d.setAttribute("cx", b.x + b.width / 2); d.setAttribute("cy", b.y + b.height / 2);
+        d.setAttribute("r", 1.5 + Math.random() * 2.5);
+        d.setAttribute("fill", k % 2 ? "#e9d9bf" : "#ffb36b");
+        d.setAttribute("class", "dust");
+        const a = Math.random() * Math.PI * 2, r = 25 + Math.random() * 45;
+        d.style.setProperty("--dx", Math.cos(a) * r + "px");
+        d.style.setProperty("--dy", Math.sin(a) * r - 15 + "px");
+        d.style.animationDelay = delay + 0.05 + "s";
+        g.appendChild(d);
+      }
+    });
+  });
+  const end = 0.9 + n * STEP + 0.4;
+  // the stone shakes as the chisel starts, then blazes when the name is done
+  const w = $("stonewrap");
+  w.classList.remove("shake", "blaze"); void w.offsetWidth; w.classList.add("shake");
+  setTimeout(() => { w.classList.add("blaze"); $("flash").classList.remove("go"); void $("flash").offsetWidth;
+                     $("flash").classList.add("go"); document.body.classList.add("glory"); }, end * 1000);
+  // caption, 13 and the text on the left appear after the carving
+  for (const id of ["caption", "n13"]){ $(id).classList.remove("late"); void $(id).getBBox(); $(id).classList.add("late"); $(id).style.animationDelay = end + 0.2 + "s"; }
+  $("left").classList.remove("fade"); $("left").classList.add("late"); $("left").style.animationDelay = end + 0.5 + "s";
+  return end;
+}
+
+function setBand(text){
+  if (bandSet || !text) return;
+  bandSet = true; $("band").textContent = text;
+}
+
+function render(s){
+  document.documentElement.dir = s.dir;
+  document.documentElement.lang = s.lang;
+  const newPhase = s.phase !== phase;
+  if (newPhase && s.phase !== "done"){
+    $("left").classList.remove("late", "fade"); $("left").style.animationDelay = "";
+    void $("left").offsetWidth; $("left").classList.add("fade");
+    $("stonewrap").classList.remove("blaze", "shake"); document.body.classList.remove("glory");
+    for (const id of ["caption", "n13"]){ $(id).classList.remove("late"); $(id).style.animationDelay = ""; }
+  }
+  document.body.classList.toggle("long", (s.story || "").length > 330);
+  document.body.classList.toggle("big", s.phase === "start" || s.phase === "final_name");
+
+  $("eyebrow").textContent = s.eyebrow;
+  $("title").textContent = s.title;
+  $("body").textContent = s.body;
+  $("body").style.display = s.body ? "flex" : "none";
+  $("story").textContent = s.story;
+  $("story").style.display = s.story ? "block" : "none";
+  if (s.photo){
+    if ($("photoimg").getAttribute("src") !== s.photo) $("photoimg").src = s.photo;
+    $("photocap").textContent = s.photo_caption; $("photo").style.display = "flex";
+  } else $("photo").style.display = "none";
+
+  $("langs").innerHTML = "";
+  if (s.phase === "start") for (const l of s.langs){
+    const e = document.createElement("span");
+    e.textContent = l.name; if (l.code === s.lang) e.className = "on";
+    $("langs").appendChild(e);
+  }
+  $("dots").innerHTML = "";
+  for (let i = 0; i < s.total; i++){
+    const d = document.createElement("i"); if (i < s.delivered.length) d.className = "on";
+    $("dots").appendChild(d);
+  }
+  $("err").textContent = s.error;
+  $("err").style.display = s.error ? "block" : "none";
+
+  // the stone
+  setBand(s.band);
+  const key = s.phase + "|" + s.stone.join("|");
+  if (key !== lastStone){
+    lastStone = key;
+    if (s.phase === "done") carveName(s.stone); else carve(s.stone);
+  }
+  $("caption").textContent = s.caption === "?" ? "" : s.caption;
+  $("caption").style.fontSize = Math.min(13, 150 / Math.max(1, s.caption.length)) + "px";
+  $("n13").setAttribute("display", s.phase === "done" ? "inline" : "none");
+  $("stone").classList.toggle("ghost", !!s.lost);
+
+  // hot and cold: meter on the left, and the fire under the stone grows with the heat
+  if (s.prox){
+    $("prox").style.display = "block";
+    $("prox").classList.toggle("here", s.prox.heat >= .92);
+    $("proxtitle").textContent = s.prox.title;
+    $("proxrunes").textContent = s.prox.runes;
+    $("proxfill").style.width = Math.max(4, s.prox.heat * 100) + "%";
+    $("proxlabel").textContent = s.prox.label;
+    $("glow").style.opacity = .5 + s.prox.heat * .5;
+    $("glow").style.transform = "translateX(-50%) scale(" + (1 + s.prox.heat * .35) + ")";
+  } else {
+    $("prox").style.display = "none";
+    $("glow").style.opacity = ""; $("glow").style.transform = "";
+  }
+
+  const input = $("name");
+  input.style.display = s.phase === "final_name" ? "block" : "none";
+  if (s.phase === "final_name" && phase !== "final_name"){ input.value = ""; input.focus(); }
+  phase = s.phase;
+
+  $("again").textContent = s.play_again;
+  $("again").style.display = s.phase === "done" ? "inline-block" : "none";
+  $("quit").style.display = s.phase !== "start" ? "block" : "none";
+  const armed = Date.now() - quitArmed < 3000;
+  $("quit").textContent = armed ? s.quit_confirm : s.quit;
+  $("quit").className = armed ? "confirm" : "";
+
+  let st = s.version + " | badge: " + (s.badge ? "connected" : "NOT connected") + " | nfc: " + (s.nfc ? "reader found" : "no reader");
+  if (s.prox) st += " | signal: " + s.prox.raw;
+  if (s.unknown_uid) st += " | NEW TAG " + s.unknown_uid + ": press a city key (T L P O U Y V H I X) or B to name it";
+  $("status").textContent = st;
+}
+
+async function refresh(){
+  try { render(await (await fetch("/state")).json()); } catch(e) {}
+}
+$("again").addEventListener("click", () => post("/reset", {}));
+$("quit").addEventListener("click", () => {
+  if (Date.now() - quitArmed < 3000){ quitArmed = 0; post("/reset", {}); }
+  else { quitArmed = Date.now(); refresh(); }
+});
+document.addEventListener("keydown", e => {
+  if (document.activeElement === $("name")){
+    if (e.key === "Enter") post("/name", {name: $("name").value});
+    return;
+  }
+  if (e.key.length === 1 && !e.ctrlKey && !e.metaKey) post("/key", {key: e.key});
+});
+setInterval(refresh, 300); refresh();
+</script></body></html>

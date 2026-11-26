@@ -1,0 +1,5 @@
+aiohttp>=3.9
+bleak>=0.22
+pyscard>=2.0
+opencv-python>=4.9
+mediapipe>=0.10.14
